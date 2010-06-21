@@ -141,6 +141,13 @@ module WebGimp
         ImageSlice.new(image.merge({ "image" => @image })).export
       end
     end
+
+    def show_all
+      @images.each do |image|
+        #File.open("/home/wander/mydebug.log", "w") { |f| f.puts "#{image.inspect}"}
+        ImageSlice.new(image.merge({ "image" => @image })).show
+      end
+    end
   end
 
   class ImageSlice
@@ -173,23 +180,44 @@ module WebGimp
       PDB['gimp-selection-none'].call(@image)
       param_selection = [@image, x1, y1, width, height, CHANNEL_OP_ADD, false, 0]
       File.open("/home/wander/mydebug.log", "w") { |f| f.puts "#{param_selection.inspect}"}
+      # restore selection
+      PDB['gimp-rect-select'].call(*param_selection)
+      # copy visible
+      image_selection = PDB['gimp-edit-copy-visible'].call(@image)
+      if image_selection
+        # create new image with copy selection
+        img = PDB['gimp-edit-paste-as-new'].call
+        # crop
+        export_jpg(img) if @formats.include? "jpg"
+        export_png(img) if @formats.include? "png"
+        export_gif(img) if @formats.include? "gif"
+      end
+    end
+
+    def show
+      # restore layers state
+      WebGimp::LayerStates.new(@image).restore_by_name(@state_name)
+      x1 = @selection[0]
+      y1 = @selection[1]
+      x2 = @selection[2]
+      y2 = @selection[3]
+      width = (x2 - x1).abs
+      height = (y2 - y1).abs
+      PDB['gimp-selection-none'].call(@image)
+      param_selection = [@image, x1, y1, width, height, CHANNEL_OP_ADD, false, 0]
+      File.open("/home/wander/mydebug.log", "w") { |f| f.puts "#{param_selection.inspect}"}
       PDB['gimp-rect-select'].call(*param_selection)
       image_selection = PDB['gimp-edit-copy-visible'].call(@image)
       if image_selection
         img = PDB['gimp-edit-paste-as-new'].call
         #Image.new(width, height, RGB)
         #layer = Layer.new(img, width, height, RGBA_IMAGE, @name, 100, NORMAL_MODE)
-        
         #img.add_layer(layer, nil)
         # img
         Display.new(img)
         Display.flush
       end
-      # restore selection
-      # copy visible
-      # create new image with copy selection
-      # crop
-      # save for web
+
     end
 
     def save
@@ -211,5 +239,97 @@ module WebGimp
       end
       store_config_file(filename, config)
     end
+
+    private
+    def drawable(img)
+      @drawable ||= PDB['gimp-image-get-active-drawable'].call(img)
+
+      @drawable
+    end
+
+    def export_jpg(img)
+      filename = @path + "/" + @name + ".jpg"
+      quality = 0.85
+      smoothing = 0.0
+      optimize = 1
+      progressive = 0
+      comment = ""
+      subsmp = 0
+      baseline = 1
+      restart = 0
+      dct = 1
+      PDB['file-jpeg-save'].call(img,
+                                 drawable(img),
+                                 filename,
+                                 filename,
+                                 quality,
+                                 smoothing,
+                                 optimize,
+                                 progressive,
+                                 comment,
+                                 subsmp,
+                                 baseline,
+                                 restart,
+                                 dct)
+    end
+    def export_png(img)
+      filename = @path + "/" + @name + ".png"
+      interlace = 0
+      compression = 9
+      bkgd = 0
+      gama = 0
+      offs = 0
+      phys = 1
+      time = 0
+      PDB['file-png-save'].call(img,
+                                drawable(img),
+                                filename,
+                                filename,
+                                interlace,
+                                compression,
+                                bkgd,
+                                gama,
+                                offs,
+                                phys,
+                                time)
+
+    end
+    def convert_indexed(img)
+      dither_type = FSLOWBLEED_DITHER
+      palette_type = MAKE_PALETTE
+      num_cols = 256
+      alpha_dither = true
+      remove_unused = 0
+      palette = ""
+      PDB['gimp-image-convert-indexed'].call(img,
+                                             dither_type,
+                                             palette_type,
+                                             num_cols,
+                                             alpha_dither,
+                                             remove_unused,
+                                             palette)
+
+      img
+    end
+
+    def export_gif(img)
+      convert_indexed(img)
+      filename = @path + "/" + @name + ".gif"
+      interlace = 0
+      loop_opt = 0
+      default_play = 10
+      default_dispose = 0
+
+      PDB['file-gif-save'].call(img,
+                                drawable(img),
+                                filename,
+                                filename,
+                                interlace,
+                                loop_opt,
+                                default_play,
+                                default_dispose)
+    end
+
+
   end
 end
