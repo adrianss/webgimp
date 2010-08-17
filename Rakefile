@@ -5,8 +5,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "webgimp"
-    gem.summary = %Q{TODO: one-line summary of your gem}
-    gem.description = %Q{TODO: longer description of your gem}
+    gem.summary = %Q{gimp ruby-fu plug-in for web slice}
+    gem.description = %Q{gimp ruby-fu plug-in for web slice}
     gem.email = "adrian.saz@gmail.com"
     gem.homepage = "http://github.com/adrianss/webgimp"
     gem.authors = ["Adrian Sanchez"]

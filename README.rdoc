@@ -1,6 +1,17 @@
-= webgimp
+= Webgimp
 
-Description goes here.
+== Experimental
+This gem / plugin is experimental and still in development
+
+== Installation
+* install ruby-fu
+* gem install webgimp
+* locate ruby-fu-web-gimp.rb (whereis ruby-fu-web-gimp.rb)
+* symlink ruby-fu-web-gimp.rb into gimp plugins and restart gimp
+
+====  Example:
+$ ln -s /usr/bin/ruby-fu-web-gimp.rb $HOME/.gimp-2.4/plug-ins/ruby-fu-web-gimp.rb
+
 
 == Note on Patches/Pull Requests
  

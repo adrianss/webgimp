@@ -3,8 +3,8 @@ require 'rubyfu'
 include Gimp
 include RubyFu
 
-require '/home/wander/proyectos/webgimp/lib/webgimp.rb'
-
+require "rubygems"
+require "webgimp"
 
 register(
          "ruby-fu-save-layers-state", #procedure name
